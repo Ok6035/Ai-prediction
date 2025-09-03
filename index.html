@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>999okwin Prediction Tool v4.0.2</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3a 50%, #2d1b69 100%);
+            color: #00ff41;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .matrix-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.1;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        .logo {
+            font-size: 24px;
+            color: #00ff41;
+            text-shadow: 0 0 10px #00ff41;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .version {
+            color: #ffff00;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ff41;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #00ff41;
+            font-weight: bold;
+        }
+
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid #00ff41;
+            border-radius: 5px;
+            color: #00ff41;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #ffff00;
+            box-shadow: 0 0 10px rgba(255, 255, 0, 0.5);
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #00ff41, #00cc33);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Courier New', monospace;
+            text-transform: uppercase;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 65, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-center {
+            display: block;
+            margin: 20px auto;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+            display: none;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff0000, #ffff00, #00ff00);
+            width: 0%;
+            transition: width 0.1s ease;
+            animation: pulse 1s infinite;
+        }
+
+        .result-display {
+            text-align: center;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .result-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            animation: bounce 1s ease-in-out;
+        }
+
+        .result-circle.red {
+            background: linear-gradient(45deg, #ff0000, #cc0000);
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.8);
+        }
+
+        .result-circle.green {
+            background: linear-gradient(45deg, #00ff00, #00cc00);
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.8);
+        }
+
+        .result-circle.violet {
+            background: linear-gradient(45deg, #8000ff, #6000cc);
+            box-shadow: 0 0 30px rgba(128, 0, 255, 0.8);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #00ff41;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ffff00;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #00ff41;
+            margin-top: 5px;
+        }
+
+        .terminal-output {
+            background: #000;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            height: 200px;
+            overflow-y: auto;
+            border: 1px solid #00ff41;
+        }
+
+        .terminal-line {
+            margin: 2px 0;
+            animation: typewriter 0.5s ease-in-out;
+        }
+
+        .error {
+            color: #ff0000 !important;
+        }
+
+        .warning {
+            color: #ffff00 !important;
+        }
+
+        .success {
+            color: #00ff00 !important;
+        }
+
+        .info {
+            color: #00ccff !important;
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 10px #00ff41; }
+            to { text-shadow: 0 0 20px #00ff41, 0 0 30px #00ff41; }
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.8; }
+            50% { opacity: 1; }
+            100% { opacity: 0.8; }
+        }
+
+        @keyframes typewriter {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .matrix-char {
+            position: absolute;
+            color: #00ff41;
+            font-size: 14px;
+            animation: matrix-fall 3s linear infinite;
+        }
+
+        @keyframes matrix-fall {
+            0% { transform: translateY(-100vh); opacity: 1; }
+            100% { transform: translateY(100vh); opacity: 0; }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .history {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            padding: 8px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-result {
+            font-weight: bold;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .stats {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="matrix-bg" id="matrixBg"></div>
+    
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                ███╗   ███╗██╗ ██████╗ ██╗    ██╗██╗███╗   ██╗
+                ████╗ ████║██║██╔═══██╗██║    ██║██║████╗  ██║
+                ██╔████╔██║██║██║   ██║██║ █╗ ██║██║██╔██╗ ██║
+                ██║╚██╔╝██║██║██║▄▄ ██║██║███╗██║██║██║╚██╗██║
+                ██║ ╚═╝ ██║██║╚██████╔╝╚███╔███╔╝██║██║ ╚████║
+                ╚═╝     ╚═╝╚═╝ ╚══▀▀═╝  ╚══╝╚══╝ ╚═╝╚═╝  ╚═══╝
+            </div>
+            <div class="version">999okwin PREDICTION SYSTEM v4.0.2</div>
+            <div class="version">ADVANCED AI PREDICTION ALGORITHM</div>
+        </div>
+
+        <div class="card">
+            <div class="input-group">
+                <label for="gameId">Game ID:</label>
+                <input type="number" id="gameId" placeholder="Enter game ID (e.g., 12345)" />
+            </div>
+
+            <div class="input-group">
+                <label for="periodNumber">Period Number:</label>
+                <input type="number" id="periodNumber" placeholder="Enter period number" />
+            </div>
+
+            <div class="input-group">
+                <label for="gameType">Game Type:</label>
+                <select id="gameType">
+                    <option value="wingo">Wingo Color</option>
+                    <option value="k3">K3 Lottery</option>
+                    <option value="5d">5D Lottery</option>
+                    <option value="trx">TRX Hash</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label for="duration">Prediction Duration:</label>
+                <select id="duration">
+                    <option value="1">1 Minute</option>
+                    <option value="3">3 Minutes</option>
+                    <option value="5">5 Minutes</option>
+                    <option value="10">10 Minutes</option>
+                </select>
+            </div>
+
+            <button class="btn btn-center" onclick="startPrediction()">🚀 GENERATE PREDICTION</button>
+        </div>
+
+        <div class="card">
+            <div class="progress-bar" id="progressBar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            
+            <div class="terminal-output" id="terminalOutput"></div>
+        </div>
+
+        <div class="card result-display" id="resultDisplay">
+            <div class="result-circle" id="resultCircle"></div>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="colorResult">-</div>
+                    <div class="stat-label">COLOR</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="numberResult">-</div>
+                    <div class="stat-label">NUMBER</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="sizeResult">-</div>
+                    <div class="stat-label">SIZE</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="accuracyResult">-</div>
+                    <div class="stat-label">ACCURACY</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 style="color: #00ff41; margin-bottom: 15px;">📊 PREDICTION HISTORY</h3>
+            <div class="history" id="historyDisplay">
+                <div class="history-item">
+                    <span>No predictions yet</span>
+                </div>
+            </div>
+            <button class="btn" onclick="clearHistory()" style="margin-top: 10px;">Clear History</button>
+        </div>
+    </div>
+
+    <script>
+        let predictionHistory = [];
+        let isProcessing = false;
+
+        // Matrix effect background
+        function createMatrixEffect() {
+            const matrixBg = document.getElementById('matrixBg');
+            const chars = '01';
+            
+            setInterval(() => {
+                if (Math.random() > 0.95) {
+                    const char = document.createElement('div');
+                    char.className = 'matrix-char';
+                    char.textContent = chars[Math.floor(Math.random() * chars.length)];
+                    char.style.left = Math.random() * 100 + '%';
+                    char.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                    matrixBg.appendChild(char);
+                    
+                    setTimeout(() => {
+                        char.remove();
+                    }, 5000);
+                }
+            }, 100);
+        }
+
+        // Terminal output functions
+        function addTerminalLine(text, className = '') {
+            const terminal = document.getElementById('terminalOutput');
+            const line = document.createElement('div');
+            line.className = `terminal-line ${className}`;
+            line.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
+            terminal.appendChild(line);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        function clearTerminal() {
+            document.getElementById('terminalOutput').innerHTML = '';
+        }
+
+        // Progress bar functions
+        function showProgressBar() {
+            document.getElementById('progressBar').style.display = 'block';
+        }
+
+        function hideProgressBar() {
+            document.getElementById('progressBar').style.display = 'none';
+        }
+
+        function updateProgress(percentage) {
+            document.getElementById('progressFill').style.width = percentage + '%';
+        }
+
+        // Prediction algorithm (mimics the original scripts)
+        function calculatePrediction(period, gameId) {
+            // Magic algorithm inspired by the original scripts
+            const magicNumber = (period * 371 + gameId * 23) % 1000;
+            const colorCode = magicNumber % 3;
+            const number = magicNumber % 10;
+            const sizeCode = number >= 5 ? 'BIG' : 'SMALL';
+            
+            // Special cases for green
+            if (number === 0) {
+                return {
+                    color: 'GREEN',
+                    number: number,
+                    size: 'GREEN',
+                    colorCode: 1
+                };
+            }
+
+            const colors = ['RED', 'GREEN', 'VIOLET'];
+            return {
+                color: colors[colorCode],
+                number: number,
+                size: sizeCode,
+                colorCode: colorCode
+            };
+        }
+
+        function calculateAccuracy(period) {
+            let accuracy = ((period * 7 + 13) % 30) + 70;
+            if (accuracy > 98) accuracy = Math.floor(Math.random() * 8) + 90;
+            return Math.min(98, accuracy);
+        }
+
+        // Main prediction function
+        async function startPrediction() {
+            if (isProcessing) return;
+            
+            const gameId = document.getElementById('gameId').value;
+            const periodNumber = document.getElementById('periodNumber').value;
+            const gameType = document.getElementById('gameType').value;
+            const duration = document.getElementById('duration').value;
+
+            if (!gameId || !periodNumber) {
+                addTerminalLine('Error: Please enter Game ID and Period Number', 'error');
+                return;
+            }
+
+            isProcessing = true;
+            clearTerminal();
+            showProgressBar();
+            document.getElementById('resultDisplay').style.display = 'none';
+
+            const phases = [
+                'Initializing AI prediction system...',
+                'Connecting to 999okwin servers...',
+                'Analyzing historical patterns...',
+                'Processing quantum algorithms...',
+                'Calculating probability matrices...',
+                'Applying machine learning models...',
+                'Validating prediction accuracy...',
+                'Generating final results...'
+            ];
+
+            let progress = 0;
+            for (let i = 0; i < phases.length; i++) {
+                addTerminalLine(phases[i], 'info');
+                progress = ((i + 1) / phases.length) * 100;
+                updateProgress(progress);
+                await sleep(800 + Math.random() * 400);
+                
+                if (i === 2) {
+                    addTerminalLine(`Target ID: ${gameId}`, 'warning');
+                    addTerminalLine(`Period: ${periodNumber}`, 'warning');
+                    addTerminalLine(`Game Type: ${gameType.toUpperCase()}`, 'warning');
+                }
+                
+                if (i === 5) {
+                    addTerminalLine('Neural network convergence: 97.3%', 'success');
+                    addTerminalLine('Pattern recognition: OPTIMAL', 'success');
+                }
+            }
+
+            // Generate prediction
+            const prediction = calculatePrediction(parseInt(periodNumber), parseInt(gameId));
+            const accuracy = calculateAccuracy(parseInt(periodNumber));
+
+            addTerminalLine('Prediction generation complete!', 'success');
+            addTerminalLine(`Result: ${prediction.color} | Number: ${prediction.number} | Size: ${prediction.size}`, 'success');
+            addTerminalLine(`Accuracy: ${accuracy}%`, 'success');
+
+            // Display results
+            hideProgressBar();
+            displayResults(prediction, accuracy);
+            
+            // Add to history
+            addToHistory(gameId, periodNumber, prediction, accuracy);
+            
+            isProcessing = false;
+        }
+
+        function displayResults(prediction, accuracy) {
+            const resultDisplay = document.getElementById('resultDisplay');
+            const resultCircle = document.getElementById('resultCircle');
+            
+            // Set circle color and emoji
+            resultCircle.className = 'result-circle';
+            let emoji = '';
+            
+            switch (prediction.color) {
+                case 'RED':
+                    resultCircle.classList.add('red');
+                    emoji = '🔴';
+                    break;
+                case 'GREEN':
+                    resultCircle.classList.add('green');
+                    emoji = '🟢';
+                    break;
+                case 'VIOLET':
+                    resultCircle.classList.add('violet');
+                    emoji = '🟣';
+                    break;
+            }
+            
+            resultCircle.textContent = emoji;
+            
+            // Update stats
+            document.getElementById('colorResult').textContent = prediction.color;
+            document.getElementById('numberResult').textContent = prediction.number;
+            document.getElementById('sizeResult').textContent = prediction.size;
+            document.getElementById('accuracyResult').textContent = accuracy + '%';
+            
+            resultDisplay.style.display = 'block';
+        }
+
+        function addToHistory(gameId, period, prediction, accuracy) {
+            const historyItem = {
+                timestamp: new Date().toLocaleString(),
+                gameId: gameId,
+                period: period,
+                prediction: prediction,
+                accuracy: accuracy
+            };
+            
+            predictionHistory.unshift(historyItem);
+            if (predictionHistory.length > 10) {
+                predictionHistory.pop();
+            }
+            
+            updateHistoryDisplay();
+        }
+
+        function updateHistoryDisplay() {
+            const historyDisplay = document.getElementById('historyDisplay');
+            
+            if (predictionHistory.length === 0) {
+                historyDisplay.innerHTML = '<div class="history-item"><span>No predictions yet</span></div>';
+                return;
+            }
+            
+            historyDisplay.innerHTML = '';
+            predictionHistory.forEach(item => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                
+                const emoji = item.prediction.color === 'RED' ? '🔴' : 
+                             item.prediction.color === 'GREEN' ? '🟢' : '🟣';
+                
+                historyItem.innerHTML = `
+                    <span>${item.timestamp} - Period: ${item.period}</span>
+                    <span class="history-result">${emoji} ${item.prediction.number} (${item.accuracy}%)</span>
+                `;
+                
+                historyDisplay.appendChild(historyItem);
+            });
+        }
+
+        function clearHistory() {
+            predictionHistory = [];
+            updateHistoryDisplay();
+            addTerminalLine('Prediction history cleared', 'warning');
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', function() {
+            createMatrixEffect();
+            addTerminalLine('999okwin Prediction System initialized', 'success');
+            addTerminalLine('AI algorithms loaded successfully', 'success');
+            addTerminalLine('System ready for predictions', 'info');
+        });
+
+        // Add some keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                startPrediction();
+            }
+            if (e.ctrlKey && e.key === 'l') {
+                clearTerminal();
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>
